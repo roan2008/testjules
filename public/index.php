@@ -27,20 +27,23 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p>Logged in as <?php echo htmlspecialchars($_SESSION['Role']); ?> | <a href="logout.php">Logout</a></p>
     <h1>Production Orders</h1>
     <p><a href="create_order.php">Create New Order</a></p>
-    <table>
-        <tr>
+    <table>        <tr>
             <th>Production Number</th>
             <th>Project</th>
             <th>Model</th>
             <th>Status</th>
-        </tr>
-        <?php foreach ($orders as $order): ?>
+            <th>Actions</th>
+        </tr>        <?php foreach ($orders as $order): ?>
         <tr>
             <td><a href="view_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>">
                 <?php echo htmlspecialchars($order['ProductionNumber']); ?></a></td>
             <td><?php echo htmlspecialchars($order['ProjectName']); ?></td>
             <td><?php echo htmlspecialchars($order['ModelName']); ?></td>
             <td><?php echo htmlspecialchars($order['MC02_Status']); ?></td>
+            <td>
+                <a href="view_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #28a745; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; margin-right: 4px;">View</a>
+                <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #007bff; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px;">Edit</a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

@@ -1,12 +1,11 @@
 <?php
 // Database configuration
 return [
-    'db' => [
-        'driver' => 'sqlsrv',
+    'db' => [        'driver' => 'mysql',
         'host' => 'localhost',
-        'database' => 'RocketProd',
-        'username' => 'sa',
-        'password' => 'your_password',
+        'database' => 'rocketprod',
+        'username' => 'root',
+        'password' => '',
     ],
 ];
 ?>

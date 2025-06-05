@@ -42,7 +42,7 @@ $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body>
-    <p><a href="index.php">Back to list</a></p>
+    <p><a href="index.php">Back to list</a> | <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">Edit Order</a></p>
     <h1>Production Number: <?php echo htmlspecialchars($order['ProductionNumber']); ?></h1>
     <p>Project: <?php echo htmlspecialchars($order['ProjectName']); ?></p>
     <p>Model: <?php echo htmlspecialchars($order['ModelName']); ?></p>
