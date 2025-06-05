@@ -13,7 +13,7 @@ $search = $_GET['search'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
 
 // Build query with filters
-$query = 'SELECT po.ProductionNumber, p.ProjectName, m.ModelName, po.MC02_Status, po.CreatedDate
+$query = 'SELECT po.ProductionNumber, p.ProjectName, m.ModelName, po.MC02_Status
           FROM ProductionOrders po
           LEFT JOIN Projects p ON po.ProjectID = p.ProjectID
           LEFT JOIN Models m ON po.ModelID = m.ModelID
@@ -33,7 +33,7 @@ if ($statusFilter) {
     $params[] = $statusFilter;
 }
 
-$query .= ' ORDER BY po.CreatedDate DESC';
+$query .= ' ORDER BY po.ProductionNumber DESC';
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
@@ -232,14 +232,12 @@ include __DIR__ . '/templates/header.php';
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
+                        <table class="table table-striped table-hover">                            <thead class="table-dark">
                                 <tr>
                                     <th>Production Number</th>
                                     <th>Project</th>
                                     <th>Model</th>
                                     <th>Status</th>
-                                    <th>Created Date</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -258,21 +256,11 @@ include __DIR__ . '/templates/header.php';
                                         $status = $order['MC02_Status'];
                                         $badgeClass = 'secondary';
                                         if ($status === 'Completed') $badgeClass = 'success';
-                                        elseif ($status === 'In Progress') $badgeClass = 'warning';
-                                        elseif ($status === 'Pending') $badgeClass = 'info';
+                                        elseif ($status === 'In Progress') $badgeClass = 'warning';                                        elseif ($status === 'Pending') $badgeClass = 'info';
                                         ?>
                                         <span class="badge bg-<?php echo $badgeClass; ?>">
                                             <?php echo htmlspecialchars($status ?: 'Not Set'); ?>
                                         </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($order['CreatedDate']): ?>
-                                            <small class="text-muted">
-                                                <?php echo date('M j, Y', strtotime($order['CreatedDate'])); ?>
-                                            </small>
-                                        <?php else: ?>
-                                            <small class="text-muted">-</small>
-                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
