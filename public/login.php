@@ -21,26 +21,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid username or password';
     }
 }
+
+$page_title = 'Login';
+include 'templates/header.php';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        .error { color: red; }
-    </style>
-</head>
-<body>
-    <h1>Login</h1>
-    <?php if ($error): ?>
-        <p class="error"><?php echo htmlspecialchars($error); ?></p>
-    <?php endif; ?>
-    <form method="post">
-        <label>Username: <input type="text" name="username" required></label><br><br>
-        <label>Password: <input type="password" name="password" required></label><br><br>
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+<h1>Login</h1>
+<?php if ($error): ?>
+    <div class="alert alert-danger" role="alert">
+        <?php echo htmlspecialchars($error); ?>
+    </div>
+<?php endif; ?>
+<form method="post" class="mt-3" style="max-width:400px;">
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+</form>
+<?php include 'templates/footer.php'; ?>
