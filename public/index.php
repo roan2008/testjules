@@ -12,28 +12,24 @@ $stmt = $pdo->query('SELECT po.ProductionNumber, p.ProjectName, m.ModelName, po.
                      LEFT JOIN Projects p ON po.ProjectID = p.ProjectID
                      LEFT JOIN Models m ON po.ModelID = m.ModelID');
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$page_title = "Production Orders";
+include 'templates/header.php';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Production Orders</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-    </style>
-</head>
-<body>
-    <p>Logged in as <?php echo htmlspecialchars($_SESSION['Role']); ?> | <a href="logout.php">Logout</a></p>
-    <h1>Production Orders</h1>
-    <p><a href="create_order.php">Create New Order</a></p>
-    <table>        <tr>
+<h1>Production Orders</h1>
+<p><a class="btn btn-primary" href="create_order.php">Create New Order</a></p>
+<table class="table table-striped">
+    <thead>
+        <tr>
             <th>Production Number</th>
             <th>Project</th>
             <th>Model</th>
             <th>Status</th>
             <th>Actions</th>
-        </tr>        <?php foreach ($orders as $order): ?>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($orders as $order): ?>
         <tr>
             <td><a href="view_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>">
                 <?php echo htmlspecialchars($order['ProductionNumber']); ?></a></td>
@@ -41,11 +37,11 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?php echo htmlspecialchars($order['ModelName']); ?></td>
             <td><?php echo htmlspecialchars($order['MC02_Status']); ?></td>
             <td>
-                <a href="view_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #28a745; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; margin-right: 4px;">View</a>
-                <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #007bff; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px;">Edit</a>
+                <a href="view_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" class="btn btn-success btn-sm me-1">View</a>
+                <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" class="btn btn-primary btn-sm">Edit</a>
             </td>
         </tr>
         <?php endforeach; ?>
-    </table>
-</body>
-</html>
+    </tbody>
+</table>
+<?php include 'templates/footer.php'; ?>

@@ -21,64 +21,54 @@ if (!$order) {
     exit;
 }
 
-// Fetch liner usage
 $stmt = $pdo->prepare('SELECT * FROM MC02_LinerUsage WHERE ProductionNumber = ?');
 $stmt->execute([$pn]);
 $liners = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch process log
 $stmt = $pdo->prepare('SELECT * FROM MC02_ProcessLog WHERE ProductionNumber = ? ORDER BY SequenceNo');
 $stmt->execute([$pn]);
 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>View Order</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 4px; }
-    </style>
-</head>
-<body>
-    <p><a href="index.php">Back to list</a> | <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" style="background-color: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">Edit Order</a></p>
-    <h1>Production Number: <?php echo htmlspecialchars($order['ProductionNumber']); ?></h1>
-    <p>Project: <?php echo htmlspecialchars($order['ProjectName']); ?></p>
-    <p>Model: <?php echo htmlspecialchars($order['ModelName']); ?></p>
-    <p>Status: <?php echo htmlspecialchars($order['MC02_Status']); ?></p>
-    <?php if ($order['MC02_SignedBy_UserID']): ?>
-        <p>Signed By: <?php echo htmlspecialchars($order['SignedBy']); ?> on <?php echo htmlspecialchars($order['MC02_SignedDate']); ?></p>
-    <?php endif; ?>
-    <h2>Liner Usage</h2>
-    <table>
-        <tr><th>Liner Type</th><th>Batch Number</th><th>Remarks</th></tr>
-        <?php foreach ($liners as $lu): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($lu['LinerType']); ?></td>
-            <td><?php echo htmlspecialchars($lu['LinerBatchNumber']); ?></td>
-            <td><?php echo htmlspecialchars($lu['Remarks']); ?></td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
 
-    <h2>Process Log</h2>
-    <table>
-        <tr>
-            <th>Seq</th><th>Step</th><th>Date</th><th>Result</th><th>Operator</th><th>Control</th><th>Actual</th><th>Remarks</th>
-        </tr>
-        <?php foreach ($logs as $log): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($log['SequenceNo']); ?></td>
-            <td><?php echo htmlspecialchars($log['ProcessStepName']); ?></td>
-            <td><?php echo htmlspecialchars($log['DatePerformed']); ?></td>
-            <td><?php echo htmlspecialchars($log['Result']); ?></td>
-            <td><?php echo htmlspecialchars($log['Operator_UserID']); ?></td>
-            <td><?php echo htmlspecialchars($log['ControlValue']); ?></td>
-            <td><?php echo htmlspecialchars($log['ActualMeasuredValue']); ?></td>
-            <td><?php echo htmlspecialchars($log['Remarks']); ?></td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
-</body>
-</html>
+$page_title = 'View Order';
+include 'templates/header.php';
+?>
+<p><a href="index.php" class="btn btn-secondary btn-sm">Back to list</a>
+   <a href="edit_order.php?pn=<?php echo urlencode($order['ProductionNumber']); ?>" class="btn btn-primary btn-sm">Edit Order</a></p>
+<h1>Production Number: <?php echo htmlspecialchars($order['ProductionNumber']); ?></h1>
+<p>Project: <?php echo htmlspecialchars($order['ProjectName']); ?></p>
+<p>Model: <?php echo htmlspecialchars($order['ModelName']); ?></p>
+<p>Status: <?php echo htmlspecialchars($order['MC02_Status']); ?></p>
+<?php if ($order['MC02_SignedBy_UserID']): ?>
+    <p>Signed By: <?php echo htmlspecialchars($order['SignedBy']); ?> on <?php echo htmlspecialchars($order['MC02_SignedDate']); ?></p>
+<?php endif; ?>
+<h2>Liner Usage</h2>
+<table class="table table-bordered">
+    <tr><th>Liner Type</th><th>Batch Number</th><th>Remarks</th></tr>
+    <?php foreach ($liners as $lu): ?>
+    <tr>
+        <td><?php echo htmlspecialchars($lu['LinerType']); ?></td>
+        <td><?php echo htmlspecialchars($lu['LinerBatchNumber']); ?></td>
+        <td><?php echo htmlspecialchars($lu['Remarks']); ?></td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+
+<h2>Process Log</h2>
+<table class="table table-bordered">
+    <tr>
+        <th>Seq</th><th>Step</th><th>Date</th><th>Result</th><th>Operator</th><th>Control</th><th>Actual</th><th>Remarks</th>
+    </tr>
+    <?php foreach ($logs as $log): ?>
+    <tr>
+        <td><?php echo htmlspecialchars($log['SequenceNo']); ?></td>
+        <td><?php echo htmlspecialchars($log['ProcessStepName']); ?></td>
+        <td><?php echo htmlspecialchars($log['DatePerformed']); ?></td>
+        <td><?php echo htmlspecialchars($log['Result']); ?></td>
+        <td><?php echo htmlspecialchars($log['Operator_UserID']); ?></td>
+        <td><?php echo htmlspecialchars($log['ControlValue']); ?></td>
+        <td><?php echo htmlspecialchars($log['ActualMeasuredValue']); ?></td>
+        <td><?php echo htmlspecialchars($log['Remarks']); ?></td>
+    </tr>
+    <?php endforeach; ?>
+</table>
+<?php include 'templates/footer.php'; ?>
