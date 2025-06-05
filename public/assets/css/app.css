@@ -1,1 +1,125 @@
-body { padding-top: 60px; }
+body { padding-top: 70px; }
+
+/* KPI Cards Styling */
+.card.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
+.card.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
+.card.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
+.card.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+/* Enhanced card shadows */
+.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+
+/* Dashboard improvements */
+.btn-group-sm > .btn, .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Table enhancements */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+/* Search form improvements */
+.input-group-text {
+    background-color: #f8f9fc;
+    border-color: #d1d3e2;
+    color: #6e707e;
+}
+
+/* Status badge improvements */
+.badge {
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+/* Empty state styling */
+.text-center .fa-inbox {
+    opacity: 0.5;
+}
+
+/* Mobile responsiveness for KPI cards */
+@media (max-width: 768px) {
+    .col-xl-3.col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .h5 {
+        font-size: 1rem;
+    }
+    
+    .fa-2x {
+        font-size: 1.5em !important;
+    }
+}
+
+/* Button group improvements */
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+/* Breadcrumb enhancements */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #6c757d;
+    font-weight: bold;
+}
+
+.breadcrumb-item.active {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.breadcrumb a {
+    color: #007bff;
+    transition: color 0.15s ease-in-out;
+}
+
+.breadcrumb a:hover {
+    color: #0056b3;
+}
+
+/* Enhanced navbar */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}

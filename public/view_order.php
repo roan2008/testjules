@@ -32,6 +32,10 @@ $stmt->execute([$pn]);
 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = 'View Order - ' . htmlspecialchars($order['ProductionNumber']);
+$breadcrumbs = [
+    ['title' => 'Orders', 'url' => 'index.php'],
+    ['title' => $order['ProductionNumber']]
+];
 include __DIR__ . '/templates/header.php';
 ?>
 

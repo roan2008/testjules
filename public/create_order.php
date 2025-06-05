@@ -65,78 +65,201 @@ $projects = $pdo->query('SELECT ProjectID, ProjectName FROM Projects ORDER BY Pr
 $users = $pdo->query('SELECT UserID, FullName FROM Users ORDER BY FullName')->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = 'Create Order';
+$breadcrumbs = [
+    ['title' => 'Create New Order']
+];
 include 'templates/header.php';
 ?>
-<h1>Create Production Order</h1>
-<?php if ($error): ?>
-    <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error); ?></div>
-<?php endif; ?>
-<form method="post">
-    <div class="mb-3">
-        <label class="form-label">Production Number</label>
-        <input type="text" name="ProductionNumber" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Empty Tube Number</label>
-        <input type="text" name="EmptyTubeNumber" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Project</label>
-        <select name="ProjectID" class="form-select" required onchange="loadModels(this.value)">
-            <option value="">--Select--</option>
-            <?php foreach ($projects as $p): ?>
-                <option value="<?php echo $p['ProjectID']; ?>"><?php echo htmlspecialchars($p['ProjectName']); ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Model</label>
-        <select name="ModelID" id="model" class="form-select" required>
-            <option value="">--Select Project First--</option>
-        </select>
-    </div>
-    <h2>Liner Usage</h2>
-    <table id="liner-table" class="table">
-        <tr><th>Type</th><th>Batch Number</th><th>Remarks</th></tr>
-        <tr>
-            <td><input type="text" name="liner[0][LinerType]" class="form-control"></td>
-            <td><input type="text" name="liner[0][LinerBatchNumber]" class="form-control"></td>
-            <td><input type="text" name="liner[0][Remarks]" class="form-control"></td>
-        </tr>
-    </table>
-    <button type="button" class="btn btn-secondary mb-3" onclick="addLinerRow()">Add Liner</button>
 
-    <h2>Process Log</h2>
-    <table id="log-table" class="table">
-        <tr><th>Seq</th><th>Step Name</th><th>Date</th><th>Result</th><th>Operator</th><th>Control</th><th>Actual</th><th>Remarks</th></tr>
-        <?php for ($i = 1; $i <= 16; $i++): ?>
-        <tr>
-            <td><input type="number" name="log[<?php echo $i; ?>][SequenceNo]" value="<?php echo $i; ?>" readonly class="form-control"></td>
-            <td><input type="text" name="log[<?php echo $i; ?>][ProcessStepName]" required class="form-control"></td>
-            <td><input type="date" name="log[<?php echo $i; ?>][DatePerformed]" class="form-control"></td>
-            <td>
-                <select name="log[<?php echo $i; ?>][Result]" class="form-select">
-                    <option value="">--</option>
-                    <option value="✓ เรียบร้อย">✓ เรียบร้อย</option>
-                    <option value="✗ แก้ไข">✗ แก้ไข</option>
-                </select>
-            </td>
-            <td>
-                <select name="log[<?php echo $i; ?>][Operator_UserID]" class="form-select">
-                    <option value="">--</option>
-                    <?php foreach ($users as $u): ?>
-                        <option value="<?php echo $u['UserID']; ?>"><?php echo htmlspecialchars($u['FullName']); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td><input type="number" step="0.001" name="log[<?php echo $i; ?>][ControlValue]" class="form-control"></td>
-            <td><input type="number" step="0.001" name="log[<?php echo $i; ?>][ActualMeasuredValue]" class="form-control"></td>
-            <td><input type="text" name="log[<?php echo $i; ?>][Remarks]" class="form-control"></td>
-        </tr>
-        <?php endfor; ?>
-    </table>
-    <button type="submit" class="btn btn-success">Save</button>
-</form>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-plus-circle me-2"></i>Create Production Order</h1>
+            <a href="index.php" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Orders
+            </a>
+        </div>
+
+        <?php if ($error): ?>
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="post">
+            <!-- Basic Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Production Number</strong> <span class="text-danger">*</span></label>
+                                <input type="text" name="ProductionNumber" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Empty Tube Number</label>
+                                <input type="text" name="EmptyTubeNumber" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Project</strong> <span class="text-danger">*</span></label>
+                                <select name="ProjectID" class="form-select" required onchange="loadModels(this.value)">
+                                    <option value="">--Select Project--</option>
+                                    <?php foreach ($projects as $p): ?>
+                                        <option value="<?php echo $p['ProjectID']; ?>"><?php echo htmlspecialchars($p['ProjectName']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Model</strong> <span class="text-danger">*</span></label>
+                                <select name="ModelID" id="model" class="form-select" required>
+                                    <option value="">--Select Project First--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liner Usage Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="fas fa-layer-group me-2"></i>Liner Usage</h5>
+                    <button type="button" class="btn btn-sm btn-success" onclick="addLinerRow()">
+                        <i class="fas fa-plus me-1"></i>Add Liner
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="liner-table" class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Batch Number</th>
+                                    <th>Remarks</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="liner[0][LinerType]" class="form-control"></td>
+                                    <td><input type="text" name="liner[0][LinerBatchNumber]" class="form-control"></td>
+                                    <td><input type="text" name="liner[0][Remarks]" class="form-control"></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLinerRow(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Log Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-clipboard-list me-2"></i>Process Log</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="log-table" class="table table-striped table-hover">                    <div class="table-responsive">
+                        <table id="log-table" class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="5%">Seq</th>
+                                    <th width="25%">Step Name</th>
+                                    <th width="12%">Date</th>
+                                    <th width="12%">Result</th>
+                                    <th width="15%">Operator</th>
+                                    <th width="10%">Control</th>
+                                    <th width="10%">Actual</th>
+                                    <th width="11%">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php for ($i = 1; $i <= 16; $i++): ?>
+                                <tr>
+                                    <td>
+                                        <input type="number" name="log[<?php echo $i; ?>][SequenceNo]" 
+                                               value="<?php echo $i; ?>" readonly class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="log[<?php echo $i; ?>][ProcessStepName]" 
+                                               required class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <input type="date" name="log[<?php echo $i; ?>][DatePerformed]" 
+                                               class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <select name="log[<?php echo $i; ?>][Result]" class="form-select form-select-sm">
+                                            <option value="">--</option>
+                                            <option value="✓ เรียบร้อย">✓ เรียบร้อย</option>
+                                            <option value="✗ แก้ไข">✗ แก้ไข</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="log[<?php echo $i; ?>][Operator_UserID]" class="form-select form-select-sm">
+                                            <option value="">--</option>
+                                            <?php foreach ($users as $u): ?>
+                                                <option value="<?php echo $u['UserID']; ?>"><?php echo htmlspecialchars($u['FullName']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" name="log[<?php echo $i; ?>][ControlValue]" 
+                                               class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.001" name="log[<?php echo $i; ?>][ActualMeasuredValue]" 
+                                               class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="log[<?php echo $i; ?>][Remarks]" 
+                                               class="form-control form-control-sm">
+                                    </td>
+                                </tr>
+                                <?php endfor; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Create Order
+                            </button>
+                            <a href="index.php" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                        <small class="text-muted">
+                            <span class="text-danger">*</span> Required fields
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 function loadModels(projectId) {
@@ -145,22 +268,86 @@ function loadModels(projectId) {
     fetch('models.php?project_id=' + projectId)
         .then(r => r.json())
         .then(data => {
-            modelSelect.innerHTML = '';
+            modelSelect.innerHTML = '<option value="">--Select Model--</option>';
             data.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.ModelID;
                 opt.textContent = m.ModelName;
                 modelSelect.appendChild(opt);
             });
+        })
+        .catch(error => {
+            console.error('Error loading models:', error);
+            modelSelect.innerHTML = '<option value="">Error loading models</option>';
         });
 }
+
 function addLinerRow() {
-    const table = document.getElementById('liner-table');
+    const table = document.getElementById('liner-table').getElementsByTagName('tbody')[0];
     const rowCount = table.rows.length;
     const row = table.insertRow();
-    row.innerHTML = `<td><input type="text" name="liner[${rowCount-1}][LinerType]" class="form-control"></td>
-                     <td><input type="text" name="liner[${rowCount-1}][LinerBatchNumber]" class="form-control"></td>
-                     <td><input type="text" name="liner[${rowCount-1}][Remarks]" class="form-control"></td>`;
+    row.innerHTML = `
+        <td><input type="text" name="liner[${rowCount}][LinerType]" class="form-control"></td>
+        <td><input type="text" name="liner[${rowCount}][LinerBatchNumber]" class="form-control"></td>
+        <td><input type="text" name="liner[${rowCount}][Remarks]" class="form-control"></td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLinerRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
 }
+
+function removeLinerRow(button) {
+    const row = button.closest('tr');
+    const table = row.closest('tbody');
+    
+    // Don't allow removing the last row
+    if (table.rows.length > 1) {
+        row.remove();
+        
+        // Update the name attributes to maintain proper indexing
+        Array.from(table.rows).forEach((row, index) => {
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                if (name && name.includes('liner[')) {
+                    const newName = name.replace(/liner\[\d+\]/, `liner[${index}]`);
+                    input.setAttribute('name', newName);
+                }
+            });
+        });
+    } else {
+        alert('You must have at least one liner row.');
+    }
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const productionNumber = document.querySelector('input[name="ProductionNumber"]').value.trim();
+        const projectId = document.querySelector('select[name="ProjectID"]').value;
+        const modelId = document.querySelector('select[name="ModelID"]').value;
+        
+        if (!productionNumber) {
+            e.preventDefault();
+            alert('Production Number is required.');
+            return;
+        }
+        
+        if (!projectId) {
+            e.preventDefault();
+            alert('Please select a Project.');
+            return;
+        }
+        
+        if (!modelId) {
+            e.preventDefault();
+            alert('Please select a Model.');
+            return;
+        }
+    });
+});
 </script>
 <?php include 'templates/footer.php'; ?>
