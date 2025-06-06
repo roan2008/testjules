@@ -87,7 +87,7 @@ include 'templates/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="post">
+        <form method="post" id="create-order-form">
             <!-- Basic Information Card -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -324,29 +324,47 @@ function removeLinerRow(button) {
 
 // Form validation
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
+    const form = document.getElementById('create-order-form');
+    if (!form) return;
+
     form.addEventListener('submit', function(e) {
-        const productionNumber = document.querySelector('input[name="ProductionNumber"]').value.trim();
-        const projectId = document.querySelector('select[name="ProjectID"]').value;
-        const modelId = document.querySelector('select[name="ModelID"]').value;
-        
+        e.preventDefault();
+        const productionNumber = form.querySelector('input[name="ProductionNumber"]').value.trim();
+        const projectId = form.querySelector('select[name="ProjectID"]').value;
+        const modelId = form.querySelector('select[name="ModelID"]').value;
+
         if (!productionNumber) {
-            e.preventDefault();
-            alert('Production Number is required.');
+            showToast('Production Number is required', 'error');
             return;
         }
-        
         if (!projectId) {
-            e.preventDefault();
-            alert('Please select a Project.');
+            showToast('Please select a Project', 'error');
             return;
         }
-        
         if (!modelId) {
-            e.preventDefault();
-            alert('Please select a Model.');
+            showToast('Please select a Model', 'error');
             return;
         }
+
+        showLoading();
+        fetch('api/create_order.php', {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(r => r.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showToast('Order created successfully!', 'success');
+                window.location.href = 'view_order.php?pn=' + encodeURIComponent(data.production_number);
+            } else {
+                showToast(data.error || 'Error creating order', 'error');
+            }
+        })
+        .catch(() => {
+            hideLoading();
+            showToast('Error creating order', 'error');
+        });
     });
 });
 </script>
