@@ -6,8 +6,7 @@ if (!isset($_SESSION['UserID'])) {
 }
 
 require_once __DIR__ . '/../src/Database.php';
-$pdo = Database::connect();
-
+$pdo = Database::conneสรุ
 // Handle search and filter parameters
 $search = $_GET['search'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
