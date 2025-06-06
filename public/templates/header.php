@@ -10,6 +10,10 @@
     <link href="assets/css/app.css" rel="stylesheet">
 </head>
 <body>
+<div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-50 d-none align-items-center justify-content-center" style="z-index:1055;">
+    <div class="spinner-border text-primary" role="status"></div>
+</div>
+<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index:1100;"></div>
 <?php include __DIR__ . '/navigation.php'; ?>
 
 <?php if (isset($breadcrumbs) && !empty($breadcrumbs)): ?>
