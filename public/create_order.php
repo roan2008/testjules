@@ -170,13 +170,13 @@ include 'templates/header.php';
 
             <!-- Process Log Card -->
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="fas fa-clipboard-list me-2"></i>Process Log</h5>
+                    <button type="button" onclick="addLogRow()" class="btn btn-primary btn-sm">Add Process Log Row</button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table id="log-table" class="table table-striped table-hover">                    <div class="table-responsive">
-                        <table id="log-table" class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="logTable">
                             <thead class="table-dark">
                                 <tr>
                                     <th width="5%">Seq</th>
@@ -187,52 +187,34 @@ include 'templates/header.php';
                                     <th width="10%">Control</th>
                                     <th width="10%">Actual</th>
                                     <th width="11%">Remarks</th>
+                                    <th width="8%">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php for ($i = 1; $i <= 16; $i++): ?>
                                 <tr>
+                                    <td><input type="number" name="log[0][SequenceNo]" value="1" class="form-control form-control-sm" readonly></td>
+                                    <td><input type="text" name="log[0][ProcessStepName]" required class="form-control form-control-sm"></td>
+                                    <td><input type="date" name="log[0][DatePerformed]" class="form-control form-control-sm"></td>
                                     <td>
-                                        <input type="number" name="log[<?php echo $i; ?>][SequenceNo]" 
-                                               value="<?php echo $i; ?>" readonly class="form-control form-control-sm">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="log[<?php echo $i; ?>][ProcessStepName]" 
-                                               required class="form-control form-control-sm">
-                                    </td>
-                                    <td>
-                                        <input type="date" name="log[<?php echo $i; ?>][DatePerformed]" 
-                                               class="form-control form-control-sm">
-                                    </td>
-                                    <td>
-                                        <select name="log[<?php echo $i; ?>][Result]" class="form-select form-select-sm">
+                                        <select name="log[0][Result]" class="form-select form-select-sm">
                                             <option value="">--</option>
                                             <option value="✓ เรียบร้อย">✓ เรียบร้อย</option>
                                             <option value="✗ แก้ไข">✗ แก้ไข</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="log[<?php echo $i; ?>][Operator_UserID]" class="form-select form-select-sm">
+                                        <select name="log[0][Operator_UserID]" class="form-select form-select-sm">
                                             <option value="">--</option>
                                             <?php foreach ($users as $u): ?>
                                                 <option value="<?php echo $u['UserID']; ?>"><?php echo htmlspecialchars($u['FullName']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </td>
-                                    <td>
-                                        <input type="number" step="0.001" name="log[<?php echo $i; ?>][ControlValue]" 
-                                               class="form-control form-control-sm">
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.001" name="log[<?php echo $i; ?>][ActualMeasuredValue]" 
-                                               class="form-control form-control-sm">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="log[<?php echo $i; ?>][Remarks]" 
-                                               class="form-control form-control-sm">
-                                    </td>
+                                    <td><input type="number" step="0.001" name="log[0][ControlValue]" class="form-control form-control-sm"></td>
+                                    <td><input type="number" step="0.001" name="log[0][ActualMeasuredValue]" class="form-control form-control-sm"></td>
+                                    <td><input type="text" name="log[0][Remarks]" class="form-control form-control-sm"></td>
+                                    <td><button type="button" onclick="removeLogRow(this)" class="btn btn-outline-danger btn-sm">Remove</button></td>
                                 </tr>
-                                <?php endfor; ?>
                             </tbody>
                         </table>
                     </div>
@@ -322,50 +304,55 @@ function removeLinerRow(button) {
     }
 }
 
-// Form validation
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('create-order-form');
-    if (!form) return;
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const productionNumber = form.querySelector('input[name="ProductionNumber"]').value.trim();
-        const projectId = form.querySelector('select[name="ProjectID"]').value;
-        const modelId = form.querySelector('select[name="ModelID"]').value;
-
-        if (!productionNumber) {
-            showToast('Production Number is required', 'error');
-            return;
-        }
-        if (!projectId) {
-            showToast('Please select a Project', 'error');
-            return;
-        }
-        if (!modelId) {
-            showToast('Please select a Model', 'error');
-            return;
-        }
-
-        showLoading();
-        fetch('api/create_order.php', {
-            method: 'POST',
-            body: new FormData(form)
-        })
-        .then(r => r.json())
-        .then(data => {
-            hideLoading();
-            if (data.success) {
-                showToast('Order created successfully!', 'success');
-                window.location.href = 'view_order.php?pn=' + encodeURIComponent(data.production_number);
-            } else {
-                showToast(data.error || 'Error creating order', 'error');
-            }
-        })
-        .catch(() => {
-            hideLoading();
-            showToast('Error creating order', 'error');
+// Process Log dynamic row functions
+let logRowCount = 1;
+function addLogRow() {
+    const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+    const newRow = table.insertRow();
+    newRow.innerHTML = `
+        <td><input type="number" name="log[${logRowCount}][SequenceNo]" value="${logRowCount+1}" class="form-control form-control-sm" readonly></td>
+        <td><input type="text" name="log[${logRowCount}][ProcessStepName]" required class="form-control form-control-sm"></td>
+        <td><input type="date" name="log[${logRowCount}][DatePerformed]" class="form-control form-control-sm"></td>
+        <td>
+            <select name="log[${logRowCount}][Result]" class="form-select form-select-sm">
+                <option value="">--</option>
+                <option value="✓ เรียบร้อย">✓ เรียบร้อย</option>
+                <option value="✗ แก้ไข">✗ แก้ไข</option>
+            </select>
+        </td>
+        <td>
+            <select name="log[${logRowCount}][Operator_UserID]" class="form-select form-select-sm">
+                <option value="">--</option>
+                <?php foreach ($users as $u): ?>
+                <option value="<?php echo $u['UserID']; ?>"><?php echo htmlspecialchars($u['FullName']); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td><input type="number" step="0.001" name="log[${logRowCount}][ControlValue]" class="form-control form-control-sm"></td>
+        <td><input type="number" step="0.001" name="log[${logRowCount}][ActualMeasuredValue]" class="form-control form-control-sm"></td>
+        <td><input type="text" name="log[${logRowCount}][Remarks]" class="form-control form-control-sm"></td>
+        <td><button type="button" onclick="removeLogRow(this)" class="btn btn-outline-danger btn-sm">Remove</button></td>
+    `;
+    logRowCount++;
+}
+function removeLogRow(button) {
+    const row = button.closest('tr');
+    const table = row.closest('tbody');
+    if (table.rows.length > 1) {
+        row.remove();
+        // Update SequenceNo and name attributes
+        Array.from(table.rows).forEach((row, idx) => {
+            row.querySelector('input[name^="log"]').value = idx + 1;
+            row.querySelectorAll('input, select').forEach(input => {
+                if (input.name) {
+                    input.name = input.name.replace(/log\[\d+\]/, `log[${idx}]`);
+                }
+            });
         });
-    });
-});
+        logRowCount = table.rows.length;
+    } else {
+        alert('You must have at least one process log row.');
+    }
+}
 </script>
 <?php include 'templates/footer.php'; ?>

@@ -1,7 +1,8 @@
 <?php
 // Database configuration
 return [
-    'db' => [        'driver' => 'mysql',
+    'db' => [
+        'driver' => 'mysql',
         'host' => 'localhost',
         'database' => 'rocketprod',
         'username' => 'root',
