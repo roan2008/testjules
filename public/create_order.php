@@ -87,7 +87,7 @@ include 'templates/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="post" id="create-order-form">
+        <form method="post" id="create-order-form" novalidate>
             <!-- Basic Information Card -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -354,5 +354,64 @@ function removeLogRow(button) {
         alert('You must have at least one process log row.');
     }
 }
+
+// --- Auto-save Draft ---
+const form = document.getElementById('create-order-form');
+const draftKey = 'createOrderDraft';
+
+function saveDraft() {
+    const data = {};
+    new FormData(form).forEach((value, key) => { data[key] = value; });
+    localStorage.setItem(draftKey, JSON.stringify(data));
+}
+
+function loadDraft() {
+    const stored = localStorage.getItem(draftKey);
+    if (!stored) return;
+    try {
+        const data = JSON.parse(stored);
+        Object.entries(data).forEach(([key, value]) => {
+            const field = form.querySelector(`[name="${key}"]`);
+            if (field) field.value = value;
+        });
+    } catch(e) { console.error('Failed to load draft', e); }
+}
+
+form.addEventListener('input', saveDraft);
+window.addEventListener('DOMContentLoaded', loadDraft);
+
+// --- AJAX Form Submission ---
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!form.checkValidity()) {
+        e.stopPropagation();
+        form.classList.add('was-validated');
+        showToast('Please fill in all required fields.', 'error');
+        return;
+    }
+
+    const formData = new FormData(form);
+    showLoading();
+    fetch('api/create_order.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            localStorage.removeItem(draftKey);
+            showToast('Order created successfully!');
+            setTimeout(() => {
+                window.location.href = 'view_order.php?pn=' + encodeURIComponent(data.production_number);
+            }, 1500);
+        } else {
+            showToast(data.error || 'Error creating order', 'error');
+        }
+    })
+    .catch(() => {
+        showToast('Error creating order', 'error');
+    })
+    .finally(() => hideLoading());
+});
 </script>
 <?php include 'templates/footer.php'; ?>

@@ -163,8 +163,8 @@ include __DIR__ . '/templates/header.php';
                         <label class="form-label">Search Orders</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Search by Production Number, Project, or Model..." 
+                            <input type="text" name="search" id="search-input" class="form-control"
+                                   placeholder="Search by Production Number, Project, or Model..."
                                    value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                     </div>
@@ -232,7 +232,7 @@ include __DIR__ . '/templates/header.php';
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">                            <thead class="table-dark">
+                        <table id="orders-table" class="table table-striped table-hover">                            <thead class="table-dark">
                                 <tr>
                                     <th>Production Number</th>
                                     <th>Project</th>
@@ -284,5 +284,18 @@ include __DIR__ . '/templates/header.php';
         </div>
     </div>
 </div>
+
+<script>
+const searchInput = document.getElementById('search-input');
+const orderRows = document.querySelectorAll('#orders-table tbody tr');
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase();
+        orderRows.forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+        });
+    });
+}
+</script>
 
 <?php include __DIR__ . '/templates/footer.php'; ?>
