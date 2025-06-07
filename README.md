@@ -4,11 +4,12 @@ This repository contains a prototype PHP application for managing rocket tube pr
 
 ## 📋 Documentation
 
-Complete documentation is available in the `/docs` folder:
+Complete documentation is available in the project root:
 
-- **[System Overview](docs/01-overview/system-overview.md)** - วัตถุประสงค์และขอบเขตระบบ
-- **[Installation Guide](docs/02-installation/installation-guide.md)** - คู่มือการติดตั้งระบบ  
-- **[User Manual](docs/03-user-manual/user-manual.md)** - คู่มือการใช้งานสำหรับผู้ใช้
+- **[Development Plan](DEVELOPMENT_PLAN.md)** - 🚀 Complete roadmap for developers
+- **[Progress Report Templates](PROGRESS_REPORT_TEMPLATES.md)** - 📊 Report templates and examples
+- **[UX/UI Improvement Plan](UXUI_IMPROVEMENT_PLAN_v2.md)** - 🎨 UI/UX specifications and progress
+- **[Installation Guide](#quick-start)** - 🔧 Setup instructions below
 
 ## 🚀 Quick Start
 
