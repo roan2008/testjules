@@ -66,6 +66,34 @@ CREATE TABLE MC02_ProcessLog (
         REFERENCES Users(UserID)
 );
 
+-- New tables for Process Templates (Phase 4)
+CREATE TABLE ProcessTemplates (
+    TemplateID INT AUTO_INCREMENT PRIMARY KEY,
+    TemplateName VARCHAR(100) NOT NULL,
+    ProjectID INT NULL,
+    ModelID INT NULL,
+    IsDefault BOOLEAN DEFAULT FALSE,
+    CreatedBy INT NOT NULL,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Templates_Projects FOREIGN KEY(ProjectID)
+        REFERENCES Projects(ProjectID),
+    CONSTRAINT FK_Templates_Models FOREIGN KEY(ModelID)
+        REFERENCES Models(ModelID),
+    CONSTRAINT FK_Templates_Users FOREIGN KEY(CreatedBy)
+        REFERENCES Users(UserID)
+);
+
+CREATE TABLE ProcessTemplateSteps (
+    TemplateStepID INT AUTO_INCREMENT PRIMARY KEY,
+    TemplateID INT NOT NULL,
+    ProcessName VARCHAR(100) NOT NULL,
+    StepOrder INT NOT NULL,
+    IsRequired BOOLEAN DEFAULT TRUE,
+    EstimatedDuration INT NULL,
+    CONSTRAINT FK_TemplateSteps_Templates FOREIGN KEY(TemplateID)
+        REFERENCES ProcessTemplates(TemplateID)
+);
+
 -- Insert sample data
 INSERT INTO Users (Username, PasswordHash, Role, FullName) VALUES 
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'Admin User'),

@@ -109,24 +109,42 @@ include 'templates/header.php';
                         </div>
                     </div>
                     <div class="row">
+                        <!-- Project/Model selection moved below -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Template Selection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-copy me-2"></i>Process Template</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Project</strong> <span class="text-danger">*</span></label>
-                                <select name="ProjectID" class="form-select" required onchange="loadModels(this.value)">
-                                    <option value="">--Select Project--</option>
-                                    <?php foreach ($projects as $p): ?>
-                                        <option value="<?php echo $p['ProjectID']; ?>"><?php echo htmlspecialchars($p['ProjectName']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <label class="form-label">Project</label>
+                            <select id="projectSelect" name="ProjectID" class="form-select" onchange="loadModels(this.value)">
+                                <option value="">Select Project</option>
+                                <?php foreach ($projects as $p): ?>
+                                    <option value="<?php echo $p['ProjectID']; ?>"><?php echo htmlspecialchars($p['ProjectName']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label"><strong>Model</strong> <span class="text-danger">*</span></label>
-                                <select name="ModelID" id="model" class="form-select" required>
-                                    <option value="">--Select Project First--</option>
-                                </select>
-                            </div>
+                            <label class="form-label">Model</label>
+                            <select id="modelSelect" name="ModelID" class="form-select" onchange="loadTemplates()">
+                                <option value="">Select Model</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Process Template</label>
+                        <select id="templateSelect" class="form-select">
+                            <option value="">Auto (Default)</option>
+                        </select>
+                        <div class="mt-2">
+                            <button type="button" id="loadTemplate" class="btn btn-outline-primary btn-sm" onclick="loadTemplateSteps()">Load Template</button>
+                            <button type="button" id="clearSteps" class="btn btn-outline-secondary btn-sm" onclick="clearSteps()">Clear All Steps</button>
                         </div>
                     </div>
                 </div>
@@ -245,23 +263,98 @@ include 'templates/header.php';
 
 <script>
 function loadModels(projectId) {
-    const modelSelect = document.getElementById('model');
+    const modelSelect = document.getElementById('modelSelect');
     modelSelect.innerHTML = '<option>Loading...</option>';
-    fetch('models.php?project_id=' + projectId)
+    fetch('api/models.php?project_id=' + projectId)
         .then(r => r.json())
-        .then(data => {
+        .then(resp => {
             modelSelect.innerHTML = '<option value="">--Select Model--</option>';
-            data.forEach(m => {
+            resp.data.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.ModelID;
                 opt.textContent = m.ModelName;
                 modelSelect.appendChild(opt);
             });
+            loadTemplates();
         })
         .catch(error => {
             console.error('Error loading models:', error);
             modelSelect.innerHTML = '<option value="">Error loading models</option>';
         });
+}
+
+function loadTemplates() {
+    const projectId = document.getElementById('projectSelect').value;
+    const modelId = document.getElementById('modelSelect').value;
+    const tplSelect = document.getElementById('templateSelect');
+    if (!projectId || !modelId) {
+        tplSelect.innerHTML = '<option value="">Auto (Default)</option>';
+        return;
+    }
+    tplSelect.innerHTML = '<option>Loading...</option>';
+    fetch(`api/templates.php?project=${projectId}&model=${modelId}&list=1`)
+        .then(r => r.json())
+        .then(resp => {
+            tplSelect.innerHTML = '<option value="">Auto (Default)</option>';
+            resp.data.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.TemplateID;
+                opt.textContent = t.TemplateName;
+                tplSelect.appendChild(opt);
+            });
+        })
+        .catch(() => {
+            tplSelect.innerHTML = '<option value="">Error loading templates</option>';
+        });
+}
+
+function loadTemplateSteps() {
+    const projectId = document.getElementById('projectSelect').value;
+    const modelId = document.getElementById('modelSelect').value;
+    const tplId = document.getElementById('templateSelect').value;
+    if (!projectId || !modelId) return;
+    showLoading();
+    let url = `api/templates.php?project=${projectId}&model=${modelId}`;
+    if (tplId) url += `&id=${tplId}`;
+    fetch(url)
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.data && resp.data.steps) {
+                populateProcessLog(resp.data.steps);
+            }
+        })
+        .finally(() => hideLoading());
+}
+
+function clearSteps() {
+    const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+    table.innerHTML = '';
+    addLogRow();
+}
+
+function populateProcessLog(steps) {
+    const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+    table.innerHTML = '';
+    steps.forEach((step, idx) => {
+        const row = table.insertRow();
+        row.innerHTML = `
+            <td><input type="number" name="log[${idx}][SequenceNo]" value="${idx+1}" class="form-control form-control-sm" readonly></td>
+            <td><input type="text" name="log[${idx}][ProcessStepName]" value="${step.ProcessName}" class="form-control form-control-sm" required></td>
+            <td><input type="date" name="log[${idx}][DatePerformed]" class="form-control form-control-sm"></td>
+            <td><select name="log[${idx}][Result]" class="form-select form-select-sm"><option value="">--</option><option value="✓ เรียบร้อย">✓ เรียบร้อย</option><option value="✗ แก้ไข">✗ แก้ไข</option></select></td>
+            <td><select name="log[${idx}][Operator_UserID]" class="form-select form-select-sm">
+                <option value="">--</option>
+                <?php foreach ($users as $u): ?>
+                <option value="<?php echo $u['UserID']; ?>"><?php echo htmlspecialchars($u['FullName']); ?></option>
+                <?php endforeach; ?>
+            </select></td>
+            <td><input type="number" step="0.001" name="log[${idx}][ControlValue]" class="form-control form-control-sm"></td>
+            <td><input type="number" step="0.001" name="log[${idx}][ActualMeasuredValue]" class="form-control form-control-sm"></td>
+            <td><input type="text" name="log[${idx}][Remarks]" class="form-control form-control-sm"></td>
+            <td><button type="button" onclick="removeLogRow(this)" class="btn btn-outline-danger btn-sm">Remove</button></td>
+        `;
+    });
+    logRowCount = steps.length;
 }
 
 function addLinerRow() {

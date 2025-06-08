@@ -6,9 +6,10 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" href="create_order.php">Create Order</a>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="create_order.php">Create Order</a></li>
+        <li class="nav-item"><a class="nav-link" href="projects.php">Projects</a></li>
+        <li class="nav-item"><a class="nav-link" href="models.php">Models</a></li>
+        <li class="nav-item"><a class="nav-link" href="templates.php">Templates</a></li>
       </ul>
       <div class="d-flex">
         <?php if (isset($_SESSION['UserID'])): ?>

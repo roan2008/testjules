@@ -64,4 +64,32 @@ CREATE TABLE MC02_ProcessLog (
         REFERENCES Users(UserID)
 );
 
+-- New tables for Process Templates (Phase 4)
+CREATE TABLE ProcessTemplates (
+    TemplateID INT AUTO_INCREMENT PRIMARY KEY,
+    TemplateName VARCHAR(100) NOT NULL,
+    ProjectID INT NULL,
+    ModelID INT NULL,
+    IsDefault BIT DEFAULT 0,
+    CreatedBy INT NOT NULL,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Templates_Projects FOREIGN KEY(ProjectID)
+        REFERENCES Projects(ProjectID),
+    CONSTRAINT FK_Templates_Models FOREIGN KEY(ModelID)
+        REFERENCES Models(ModelID),
+    CONSTRAINT FK_Templates_Users FOREIGN KEY(CreatedBy)
+        REFERENCES Users(UserID)
+);
+
+CREATE TABLE ProcessTemplateSteps (
+    TemplateStepID INT AUTO_INCREMENT PRIMARY KEY,
+    TemplateID INT NOT NULL,
+    ProcessName VARCHAR(100) NOT NULL,
+    StepOrder INT NOT NULL,
+    IsRequired BIT DEFAULT 1,
+    EstimatedDuration INT NULL,
+    CONSTRAINT FK_TemplateSteps_Templates FOREIGN KEY(TemplateID)
+        REFERENCES ProcessTemplates(TemplateID)
+);
+
 
