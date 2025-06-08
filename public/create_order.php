@@ -129,10 +129,9 @@ include 'templates/header.php';
                                     <option value="<?php echo $p['ProjectID']; ?>"><?php echo htmlspecialchars($p['ProjectName']); ?></option>
                                 <?php endforeach; ?>
                             </select>
-                        </div>
-                        <div class="col-md-6">
+                        </div>                        <div class="col-md-6">
                             <label class="form-label">Model</label>
-                            <select id="modelSelect" name="ModelID" class="form-select" onchange="loadTemplates()">
+                            <select id="modelSelect" name="ModelID" class="form-select" onchange="onModelChange()">
                                 <option value="">Select Model</option>
                             </select>
                         </div>
@@ -141,10 +140,10 @@ include 'templates/header.php';
                         <label class="form-label">Process Template</label>
                         <select id="templateSelect" class="form-select">
                             <option value="">Auto (Default)</option>
-                        </select>
-                        <div class="mt-2">
-                            <button type="button" id="loadTemplate" class="btn btn-outline-primary btn-sm" onclick="loadTemplateSteps()">Load Template</button>
-                            <button type="button" id="clearSteps" class="btn btn-outline-secondary btn-sm" onclick="clearSteps()">Clear All Steps</button>
+                        </select>                        <div class="mt-2">
+                            <button type="button" id="loadTemplate" class="btn btn-outline-primary btn-sm" onclick="loadTemplateSteps()">🔄 Load Template</button>
+                            <button type="button" id="clearSteps" class="btn btn-outline-secondary btn-sm" onclick="clearSteps()">🗑️ Clear All Steps</button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="autoLoadTemplate()">⚡ Auto-Load</button>
                         </div>
                     </div>
                 </div>
@@ -264,23 +263,40 @@ include 'templates/header.php';
 <script>
 function loadModels(projectId) {
     const modelSelect = document.getElementById('modelSelect');
+    const templateSelect = document.getElementById('templateSelect');
+    
+    if (!projectId) {
+        modelSelect.innerHTML = '<option value="">--Select Model--</option>';
+        templateSelect.innerHTML = '<option value="">Auto (Default)</option>';
+        return;
+    }
+    
     modelSelect.innerHTML = '<option>Loading...</option>';
     fetch('api/models.php?project_id=' + projectId)
         .then(r => r.json())
         .then(resp => {
             modelSelect.innerHTML = '<option value="">--Select Model--</option>';
-            resp.data.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.ModelID;
-                opt.textContent = m.ModelName;
-                modelSelect.appendChild(opt);
-            });
+            if (resp.success && resp.data) {
+                resp.data.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.ModelID;
+                    opt.textContent = m.ModelName;
+                    modelSelect.appendChild(opt);
+                });
+            }
             loadTemplates();
         })
         .catch(error => {
             console.error('Error loading models:', error);
             modelSelect.innerHTML = '<option value="">Error loading models</option>';
         });
+}
+
+// New function for Model change event
+function onModelChange() {
+    loadTemplates();
+    // Auto-load template after templates are loaded
+    setTimeout(() => autoLoadTemplate(), 800);
 }
 
 function loadTemplates() {
@@ -506,5 +522,36 @@ form.addEventListener('submit', function(e) {
     })
     .finally(() => hideLoading());
 });
+
+// Auto-load template function
+function autoLoadTemplate() {
+    const projectId = document.getElementById('projectSelect').value;
+    const modelId = document.getElementById('modelSelect').value;
+    
+    if (!projectId || !modelId) {
+        showToast('Please select both Project and Model first', 'warning');
+        return;
+    }
+    
+    showLoading();
+    showToast('🔄 Auto-loading template...', 'info');
+    
+    // Fetch default template for this project/model combination
+    fetch(`api/templates.php?project=${projectId}&model=${modelId}`)
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success && resp.data && resp.data.steps && resp.data.steps.length > 0) {
+                populateProcessLog(resp.data.steps);
+                showToast(`✅ Loaded "${resp.data.TemplateName}" template with ${resp.data.steps.length} steps`, 'success');
+            } else {
+                showToast('ℹ️ No template found for this Project/Model combination', 'info');
+            }
+        })
+        .catch(error => {
+            console.error('Error auto-loading template:', error);
+            showToast('❌ Error loading template', 'error');
+        })
+        .finally(() => hideLoading());
+}
 </script>
 <?php include 'templates/footer.php'; ?>

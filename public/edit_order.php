@@ -151,10 +151,9 @@ include __DIR__ . '/templates/header.php';
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
-                            <div class="mb-3">
+                        <div class="col-md-6">                            <div class="mb-3">
                                 <label for="ProjectID" class="form-label"><strong>Project:</strong></label>
-                                <select class="form-select" id="ProjectID" name="ProjectID">
+                                <select class="form-select" id="ProjectID" name="ProjectID" onchange="loadModels(this.value)">
                                     <option value="">Select Project</option>
                                     <?php foreach ($projects as $project): ?>
                                         <option value="<?php echo $project['ProjectID']; ?>" <?php echo ($project['ProjectID'] == $order['ProjectID']) ? 'selected' : ''; ?>>
@@ -166,7 +165,7 @@ include __DIR__ . '/templates/header.php';
                             
                             <div class="mb-3">
                                 <label for="ModelID" class="form-label"><strong>Model:</strong></label>
-                                <select class="form-select" id="ModelID" name="ModelID">
+                                <select class="form-select" id="ModelID" name="ModelID" onchange="onModelChange()">
                                     <option value="">Select Model</option>
                                     <?php foreach ($models as $model): ?>
                                         <option value="<?php echo $model['ModelID']; ?>" <?php echo ($model['ModelID'] == $order['ModelID']) ? 'selected' : ''; ?>>
@@ -184,10 +183,38 @@ include __DIR__ . '/templates/header.php';
                                     <option value="Completed" <?php echo ($order['MC02_Status'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
                                     <option value="On Hold" <?php echo ($order['MC02_Status'] == 'On Hold') ? 'selected' : ''; ?>>On Hold</option>
                                 </select>
+                            </div>                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Template Re-loading (Edit Mode) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-sync me-2"></i>Process Template Management</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Load a process template to replace current process steps. <strong>This will overwrite existing process log entries.</strong></p>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Available Templates</label>
+                            <select id="templateSelect" class="form-select">
+                                <option value="">Choose Template</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="btn-group" role="group">
+                                <button type="button" id="loadTemplate" class="btn btn-outline-primary" onclick="loadTemplateSteps()">
+                                    <i class="fas fa-download me-1"></i>Load Template
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" onclick="autoLoadTemplate()">
+                                    <i class="fas fa-magic me-1"></i>Auto-Load
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>            </div>
+                </div>
+            </div>
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -324,6 +351,174 @@ include __DIR__ . '/templates/header.php';
             const row = button.closest('tr');
             row.remove();
         }
+
+        // Template loading functions for edit form
+        function loadModels(projectId) {
+            const modelSelect = document.getElementById('ModelID');
+            const templateSelect = document.getElementById('templateSelect');
+            
+            if (!projectId) {
+                // Keep existing models but clear templates
+                templateSelect.innerHTML = '<option value="">Choose Template</option>';
+                return;
+            }
+            
+            // Load models for the selected project, but preserve current selection
+            const currentModelId = modelSelect.value;
+            
+            fetch('api/models.php?project_id=' + projectId)
+                .then(r => r.json())
+                .then(resp => {
+                    const prevValue = modelSelect.value;
+                    modelSelect.innerHTML = '<option value="">Select Model</option>';
+                    if (resp.success && resp.data) {
+                        resp.data.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m.ModelID;
+                            opt.textContent = m.ModelName;
+                            if (m.ModelID == currentModelId) opt.selected = true;
+                            modelSelect.appendChild(opt);
+                        });
+                    }
+                    loadTemplates();
+                })
+                .catch(error => {
+                    console.error('Error loading models:', error);
+                });
+        }
+
+        function onModelChange() {
+            loadTemplates();
+        }
+
+        function loadTemplates() {
+            const projectId = document.getElementById('ProjectID').value;
+            const modelId = document.getElementById('ModelID').value;
+            const tplSelect = document.getElementById('templateSelect');
+            
+            if (!projectId || !modelId) {
+                tplSelect.innerHTML = '<option value="">Choose Template</option>';
+                return;
+            }
+            
+            tplSelect.innerHTML = '<option>Loading...</option>';
+            fetch(`api/templates.php?project=${projectId}&model=${modelId}&list=1`)
+                .then(r => r.json())
+                .then(resp => {
+                    tplSelect.innerHTML = '<option value="">Choose Template</option>';
+                    if (resp.success && resp.data) {
+                        resp.data.forEach(t => {
+                            const opt = document.createElement('option');
+                            opt.value = t.TemplateID;
+                            opt.textContent = t.TemplateName;
+                            tplSelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(() => {
+                    tplSelect.innerHTML = '<option value="">Error loading templates</option>';
+                });
+        }
+
+        function loadTemplateSteps() {
+            const projectId = document.getElementById('ProjectID').value;
+            const modelId = document.getElementById('ModelID').value;
+            const tplId = document.getElementById('templateSelect').value;
+            
+            if (!projectId || !modelId) {
+                alert('Please select both Project and Model first');
+                return;
+            }
+            
+            if (!confirm('This will replace all current process log entries. Continue?')) {
+                return;
+            }
+            
+            showLoading();
+            let url = `api/templates.php?project=${projectId}&model=${modelId}`;
+            if (tplId) url += `&id=${tplId}`;
+            
+            fetch(url)
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp.success && resp.data && resp.data.steps) {
+                        populateProcessLog(resp.data.steps);
+                        showToast(`Loaded template with ${resp.data.steps.length} steps`, 'success');
+                    } else {
+                        showToast('No template steps found', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading template:', error);
+                    showToast('Error loading template', 'error');
+                })
+                .finally(() => hideLoading());
+        }
+
+        function autoLoadTemplate() {
+            const projectId = document.getElementById('ProjectID').value;
+            const modelId = document.getElementById('ModelID').value;
+            
+            if (!projectId || !modelId) {
+                alert('Please select both Project and Model first');
+                return;
+            }
+            
+            if (!confirm('This will replace all current process log entries with the default template. Continue?')) {
+                return;
+            }
+            
+            showLoading();
+            showToast('🔄 Auto-loading template...', 'info');
+            
+            fetch(`api/templates.php?project=${projectId}&model=${modelId}`)
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp.success && resp.data && resp.data.steps && resp.data.steps.length > 0) {
+                        populateProcessLog(resp.data.steps);
+                        showToast(`✅ Loaded "${resp.data.TemplateName}" template with ${resp.data.steps.length} steps`, 'success');
+                    } else {
+                        showToast('ℹ️ No default template found for this Project/Model combination', 'info');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error auto-loading template:', error);
+                    showToast('❌ Error loading template', 'error');
+                })
+                .finally(() => hideLoading());
+        }
+
+        function populateProcessLog(steps) {
+            const table = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+            table.innerHTML = '';
+            
+            steps.forEach((step, idx) => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td><input type="number" class="form-control form-control-sm" name="log[${idx}][SequenceNo]" value="${idx+1}" style="width: 70px;"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="log[${idx}][ProcessStepName]" value="${step.ProcessName}"></td>
+                    <td><input type="date" class="form-control form-control-sm" name="log[${idx}][DatePerformed]"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="log[${idx}][Result]"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="log[${idx}][Operator_UserID]" style="width: 90px;"></td>
+                    <td><input type="number" step="0.001" class="form-control form-control-sm" name="log[${idx}][ControlValue]" style="width: 100px;"></td>
+                    <td><input type="number" step="0.001" class="form-control form-control-sm" name="log[${idx}][ActualMeasuredValue]" style="width: 100px;"></td>
+                    <td><textarea class="form-control form-control-sm" name="log[${idx}][Remarks]" rows="2"></textarea></td>
+                    <td><button type="button" onclick="removeRow(this)" class="btn btn-outline-danger btn-sm">Remove</button></td>
+                `;
+            });
+            
+            logRowCount = steps.length;
+        }
+
+        // Load templates on page load if project and model are already selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectId = document.getElementById('ProjectID').value;
+            const modelId = document.getElementById('ModelID').value;
+            
+            if (projectId && modelId) {
+                loadTemplates();
+            }
+        });
     </script>
 
 <?php include __DIR__ . '/templates/footer.php'; ?>

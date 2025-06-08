@@ -10,29 +10,51 @@ if (!isset($_SESSION['UserID'])) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch ($method) {
-    case 'GET':
+switch ($method) {    case 'GET':
+        $templateId = $_GET['id'] ?? null;
         $projectId = $_GET['project'] ?? null;
         $modelId = $_GET['model'] ?? null;
-        if ($projectId || $modelId) {
+        $includeSteps = isset($_GET['include_steps']);
+        
+        if ($templateId) {
+            // Get specific template with optional steps
+            $stmt = $pdo->prepare('SELECT * FROM ProcessTemplates WHERE TemplateID = ?');
+            $stmt->execute([$templateId]);
+            $template = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$template) {
+                sendJsonResponse(false, null, 'Template not found', 404);
+            }
+            
+            if ($includeSteps) {
+                $stepStmt = $pdo->prepare('SELECT * FROM ProcessTemplateSteps WHERE TemplateID = ? ORDER BY StepOrder');
+                $stepStmt->execute([$templateId]);
+                $template['steps'] = $stepStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            
+            sendJsonResponse(true, $template, 'OK');
+        } else if ($projectId || $modelId) {
             $stmt = $pdo->prepare('SELECT * FROM ProcessTemplates WHERE (ProjectID=? OR ? IS NULL) AND (ModelID=? OR ? IS NULL) ORDER BY TemplateName');
             $stmt->execute([$projectId, $projectId, $modelId, $modelId]);
-        } else {
-            $stmt = $pdo->query('SELECT * FROM ProcessTemplates ORDER BY TemplateName');
-        }
-        $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        if ($projectId && $modelId && !isset($_GET['list'])) {
-            // return first template (default) with steps
-            if ($templates) {
-                $tpl = $templates[0];
-                $s = $pdo->prepare('SELECT * FROM ProcessTemplateSteps WHERE TemplateID=? ORDER BY StepOrder');
-                $s->execute([$tpl['TemplateID']]);
-                $tpl['steps'] = $s->fetchAll(PDO::FETCH_ASSOC);
-                sendJsonResponse(true, $tpl, 'OK');
+            $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if ($projectId && $modelId && !isset($_GET['list'])) {
+                // return first template (default) with steps
+                if ($templates) {
+                    $tpl = $templates[0];
+                    $s = $pdo->prepare('SELECT * FROM ProcessTemplateSteps WHERE TemplateID=? ORDER BY StepOrder');
+                    $s->execute([$tpl['TemplateID']]);
+                    $tpl['steps'] = $s->fetchAll(PDO::FETCH_ASSOC);
+                    sendJsonResponse(true, $tpl, 'OK');
+                } else {
+                    sendJsonResponse(true, null, 'No template');
+                }
             } else {
-                sendJsonResponse(true, null, 'No template');
+                sendJsonResponse(true, $templates, 'OK');
             }
         } else {
+            $stmt = $pdo->query('SELECT * FROM ProcessTemplates ORDER BY TemplateName');
+            $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
             sendJsonResponse(true, $templates, 'OK');
         }
         break;
